@@ -3,6 +3,13 @@ import http from "http";
 import cors from "cors";
 import dotenv from "dotenv";
 
+// Session stuff & passport stuff
+import passport from "passport";
+import { buildContext } from "graphql-passport";
+import session from "express-session";
+import connectMongo from "connect-mongodb-session";
+
+// GraphQL stuff
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
@@ -14,7 +21,11 @@ import mergedTypeDefs from "./typeDefs/index.js";
 // DB connection
 import connectDB from "./db/connectDB.js";
 
+// Authentication
+import { configurePassort } from "./passport/passport.config.js";
+
 dotenv.config();
+configurePassort();
 
 // Our httpServer handles incoming requests to our Express app.
 // Below, we tell Apollo Server to "drain" this httpServer,
@@ -23,7 +34,32 @@ dotenv.config();
 const app = express();
 const httpServer = http.createServer(app);
 
-// Same ApolloServer initialization as before, plus the drain plugin
+const MongoDBStore = connectMongo(session);
+const store = new MongoDBStore({
+  uri: process.env.MONGO_URI,
+  collection: "sessions",
+});
+
+store.on("error", (error) => {
+  console.log(error);
+});
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false, // This option specifies whether to save the session to the store on every request or not. true = we allow multiple sessions for one user
+    saveUninitialized: false, // Option specifies whether to save uninitialized sessions
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24 * 7, // Expire in 7 days
+      httpOnly: true, // Prevents Cross-Site Scripting (XSS) attacks
+    },
+    store: store,
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 // for our httpServer.
 const server = new ApolloServer({
   typeDefs: mergedTypeDefs,
@@ -37,12 +73,15 @@ await server.start();
 // and our expressMiddleware function.
 app.use(
   "/",
-  cors(),
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  }),
   express.json(),
   // expressMiddleware accepts the same arguments:
   // an Apollo Server instance and optional configuration options
   expressMiddleware(server, {
-    context: async ({ req }) => ({ req }),
+    context: async ({ req, res }) => buildContext({ req, res }),
   })
 );
 
