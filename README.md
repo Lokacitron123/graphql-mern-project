@@ -1,12 +1,12 @@
-Aktuell tid: https://youtu.be/Vr-QHtbmd38?t=6059
+# Learning Journey:
+
+I would like to extend my gratitude to [Burak Orkmez](https://github.com/burakorkmez/) for providing such an insightful and comprehensive tutorial on building the GraphQL Expense Tracker App. Through this course, I've gained valuable insights and skills, which have greatly enhanced my understanding of web development using GraphQL and the MERN stack.
 
 # GraphQL Crash Course - Build an Expense Tracker App
 
 ![Demo App](https://i.ibb.co/ygxgbNm/Screenshot-11.png)
 
 [Video Tutorial on Youtube](https://youtu.be/Vr-QHtbmd38)
-
-Welcome to the MERN GraphQL Expense Tracker App! This project is designed to help you manage your expenses efficiently using a modern tech stack and GraphQL.
 
 ## Features:
 
