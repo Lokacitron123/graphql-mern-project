@@ -1,13 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
-import dotenv from "dotenv";
 import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 import GridBackground from "./components/ui/GridBackground.jsx";
 import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
-
-dotenv.config();
 
 const client = new ApolloClient({
   // TODO => Update the uri on production

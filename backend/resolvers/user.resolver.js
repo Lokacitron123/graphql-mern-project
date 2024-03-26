@@ -1,4 +1,3 @@
-import { users } from "../dummyData/data.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 
@@ -29,7 +28,7 @@ const userResolver = {
           name,
           password: hashedPassword,
           gender,
-          profilePicture: gender === male ? boyProfilePic : girlProfilePic,
+          profilePicture: gender === "male" ? boyProfilePic : girlProfilePic,
         });
 
         await newUser.save();
@@ -57,13 +56,13 @@ const userResolver = {
       }
     },
 
-    logout: async (_, context) => {
+    logout: async (_, __, context) => {
       try {
         await context.logout();
-        req.session.destroy((err) => {
+        context.req.session.destroy((err) => {
           if (err) throw err;
         });
-        res.clearCookie("connect.sid");
+        context.res.clearCookie("connect.sid");
         return { message: "Logged out successfully" };
       } catch (error) {
         console.error("Error in logout: ", error);
@@ -72,22 +71,22 @@ const userResolver = {
     },
   },
   Query: {
-    authUser: async (_, context) => {
+    authUser: async (_, __, context) => {
       try {
         const user = await context.getUser();
         return user;
-      } catch (error) {
-        console.error("Error in authUser: ", error);
-        throw new Error(error.message || "Internal server error");
+      } catch (err) {
+        console.error("Error in authUser: ", err);
+        throw new Error("Internal server error");
       }
     },
     user: async (_, { userId }) => {
       try {
         const user = await User.findById(userId);
         return user;
-      } catch (error) {
-        console.error("Error in user query: ", error);
-        throw new Error(error.message || "Error getting user");
+      } catch (err) {
+        console.error("Error in user query:", err);
+        throw new Error(err.message || "Error getting user");
       }
     },
   },

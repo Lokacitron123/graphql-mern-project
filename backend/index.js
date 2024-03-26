@@ -2,56 +2,52 @@ import express from "express";
 import http from "http";
 import cors from "cors";
 import dotenv from "dotenv";
-
-// Session stuff & passport stuff
+import path from "path";
 import passport from "passport";
-import { buildContext } from "graphql-passport";
 import session from "express-session";
 import connectMongo from "connect-mongodb-session";
 
-// GraphQL stuff
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 
-// Resolvers & TypeDefs
+import { buildContext } from "graphql-passport";
+
 import mergedResolvers from "./resolvers/index.js";
 import mergedTypeDefs from "./typeDefs/index.js";
 
-// DB connection
 import connectDB from "./db/connectDB.js";
+import configurePassport from "./passport/passport.config.js";
 
-// Authentication
-import { configurePassort } from "./passport/passport.config.js";
+// import job from "./cron.js";
 
 dotenv.config();
-configurePassort();
+configurePassport();
 
-// Our httpServer handles incoming requests to our Express app.
-// Below, we tell Apollo Server to "drain" this httpServer,
-// enabling our servers to shut down gracefully.
+// job.start();
 
+const __dirname = path.resolve();
 const app = express();
+
 const httpServer = http.createServer(app);
 
 const MongoDBStore = connectMongo(session);
+
 const store = new MongoDBStore({
   uri: process.env.MONGO_URI,
   collection: "sessions",
 });
 
-store.on("error", (error) => {
-  console.log(error);
-});
+store.on("error", (err) => console.log(err));
 
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
-    resave: false, // This option specifies whether to save the session to the store on every request or not. true = we allow multiple sessions for one user
-    saveUninitialized: false, // Option specifies whether to save uninitialized sessions
+    resave: false, // this option specifies whether to save the session to the store on every request
+    saveUninitialized: false, // option specifies whether to save uninitialized sessions
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7, // Expire in 7 days
-      httpOnly: true, // Prevents Cross-Site Scripting (XSS) attacks
+      httpOnly: true, // this option prevents the Cross-Site Scripting (XSS) attacks
     },
     store: store,
   })
@@ -60,12 +56,12 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// for our httpServer.
 const server = new ApolloServer({
   typeDefs: mergedTypeDefs,
   resolvers: mergedResolvers,
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 });
+
 // Ensure we wait for our server to start
 await server.start();
 
@@ -84,6 +80,13 @@ app.use(
     context: async ({ req, res }) => buildContext({ req, res }),
   })
 );
+
+// npm run build will build your frontend app, and it will the optimized version of your app
+app.use(express.static(path.join(__dirname, "frontend/dist")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend/dist", "index.html"));
+});
 
 // Modified server startup
 await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
