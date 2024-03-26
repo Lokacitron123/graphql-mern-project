@@ -1,9 +1,41 @@
+import { useMutation } from "@apollo/client";
+import { CREATE_TRANSACTION } from "../graphql/mutations/transaction.mutation";
+import toast from "react-hot-toast";
+
 const TransactionForm = () => {
+  // TODO => WHEN RELATIONSHIPS ARE ADDED, Change the refetch query
+  const [createTransaction, { loading }] = useMutation(CREATE_TRANSACTION, {
+    refetchQueries: ["GetTransactions"],
+  });
+
+  // Array containing the names of all required form fields
+  const requiredFields = [
+    "description",
+    "paymentType",
+    "category",
+    "amount",
+    "location",
+    "date",
+  ];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const form = e.target;
-    const formData = new FormData(form);
+    const form = e.target; // Get the form element
+    const formData = new FormData(form); // Create FormData object to access form data
+
+    // Filter the required fields array to find any missing fields in the form
+    const missingFields = requiredFields.filter(
+      (field) => !formData.get(field)
+    );
+
+    // If any required field is missing, display an error toast and stop form submission
+    if (missingFields.length > 0) {
+      toast.error("All fields are required");
+      return;
+    }
+
+    // If all required fields are present, construct transaction data object
     const transactionData = {
       description: formData.get("description"),
       paymentType: formData.get("paymentType"),
@@ -12,7 +44,17 @@ const TransactionForm = () => {
       location: formData.get("location"),
       date: formData.get("date"),
     };
-    console.log("transactionData", transactionData);
+
+    try {
+      await createTransaction({
+        variables: { input: transactionData },
+      });
+
+      form.reset();
+      toast.success("Transaction created successfully");
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   return (
@@ -159,8 +201,9 @@ const TransactionForm = () => {
           from-pink-500 to-pink-500 hover:from-pink-600 hover:to-pink-600
 						disabled:opacity-70 disabled:cursor-not-allowed'
         type='submit'
+        disabled={loading}
       >
-        Add Transaction
+        {loading ? "Loading..." : "Submit Transaction"}
       </button>
     </form>
   );

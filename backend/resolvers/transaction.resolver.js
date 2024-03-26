@@ -4,7 +4,7 @@ const transactionResolver = {
   Query: {
     transactions: async (_, __, context) => {
       try {
-        if (context.getUser()) {
+        if (!context.getUser()) {
           throw new Error("Unauthorized");
         }
 
@@ -34,12 +34,12 @@ const transactionResolver = {
       try {
         const newTransaction = new Transaction({
           ...input,
-          userId: context.getUSer()._id,
+          userId: context.getUser()._id,
         });
-
         await newTransaction.save();
-      } catch (error) {
-        console.error("Error creating transaction", error);
+        return newTransaction;
+      } catch (err) {
+        console.error("Error creating transaction:", err);
         throw new Error("Error creating transaction");
       }
     },
@@ -48,13 +48,14 @@ const transactionResolver = {
         const updatedTransaction = await Transaction.findByIdAndUpdate(
           input.transactionId,
           input,
-          { new: true }
+          {
+            new: true,
+          }
         );
-
         return updatedTransaction;
-      } catch (error) {
-        console.error("Error updated transaction", error);
-        throw new Error("Error updated transaction");
+      } catch (err) {
+        console.error("Error updating transaction:", err);
+        throw new Error("Error updating transaction");
       }
     },
     deleteTransaction: async (_, { transactionId }) => {
@@ -62,10 +63,9 @@ const transactionResolver = {
         const deletedTransaction = await Transaction.findByIdAndDelete(
           transactionId
         );
-
         return deletedTransaction;
-      } catch (error) {
-        console.error("Error deleting transaction", error);
+      } catch (err) {
+        console.error("Error deleting transaction:", err);
         throw new Error("Error deleting transaction");
       }
     },
