@@ -1,3 +1,5 @@
+Aktuell tid: https://youtu.be/Vr-QHtbmd38?t=6059
+
 # GraphQL Crash Course - Build an Expense Tracker App
 
 ![Demo App](https://i.ibb.co/ygxgbNm/Screenshot-11.png)
