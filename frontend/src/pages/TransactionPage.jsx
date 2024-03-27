@@ -13,10 +13,13 @@ const TransactionPage = () => {
     variables: { id: id },
   });
 
+  console.log("Logging transaction data", data);
+
   const [updateTransaction, { loading: loadingUpdate }] = useMutation(
     UPDATE_TRANSACTION,
     { refetchQueries: ["GetTransactions", "GetTransactionStatistics"] }
   );
+
   const [formData, setFormData] = useState({
     description: data?.transaction?.description || "",
     paymentType: data?.transaction?.paymentType || "",
