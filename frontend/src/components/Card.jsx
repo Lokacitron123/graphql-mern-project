@@ -21,14 +21,14 @@ const Card = ({ transaction }) => {
   let { category, amount, location, date, paymentType, description } =
     transaction;
 
-  const cardClass = categoryColorMap[category]; // Put above toUpperCase function
+  const cardClass = categoryColorMap[category];
 
   description = description[0]?.toUpperCase() + description.slice(1);
   category = category[0]?.toUpperCase() + category.slice(1);
   const formattedDate = formatDate(date);
 
   const [deleteTransaction, { loading }] = useMutation(DELETE_TRANSACTION, {
-    refetchQueries: ["GetTransactions"],
+    refetchQueries: ["GetTransactions", "GetTransactionStatistics"],
   });
 
   const handleDelete = async () => {
